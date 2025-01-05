@@ -7,6 +7,8 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import {
   SidebarProvider,
@@ -15,6 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/server";
 import { Separator } from "@radix-ui/react-dropdown-menu";
+import { Paperclip, Send } from "lucide-react";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
@@ -58,13 +61,19 @@ export default async function Home() {
           </Breadcrumb>
           <ModeToggle className="ml-auto" />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          {Array.from({ length: 24 }).map((_, index) => (
-            <div
-              key={index}
-              className="aspect-video h-12 w-full rounded-lg bg-muted/50"
-            />
-          ))}
+        <div className="flex flex-1 flex-col gap-4 p-4 justify-between">
+          <div>Chat container</div>
+          <div className="flex flex-row items-center gap-4 justify-between">
+            <Button>
+              <Paperclip />
+            </Button>
+            <div className="flex flex-1">
+              <Input placeholder="Type a message" />
+            </div>
+            <Button>
+              <Send />
+            </Button>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
