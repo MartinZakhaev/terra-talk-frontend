@@ -17,12 +17,19 @@ import {
   FormMessage,
 } from "../ui/form";
 import { signup } from "../../lib/actions/auth.action";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { useState } from "react";
+import { useDropzone } from "react-dropzone";
+import crypto from "crypto";
 
 interface SignUpFormProps {
   setIsLoading: (isLoading: boolean) => void;
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPublicId, setAvatarPublicId] = useState<string | null>(null);
+
   const form = useForm<z.infer<typeof SignUpSchema>>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
@@ -35,11 +42,68 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
     },
   });
 
+  const onDrop = async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "jaui18jp");
+    formData.append("folder", "terra-talk/users-avatars");
+
+    if (avatarPublicId) {
+      const deleteFormData = new FormData();
+      deleteFormData.append("public_id", avatarPublicId);
+      deleteFormData.append(
+        "api_key",
+        process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY!
+      );
+      deleteFormData.append("timestamp", String(Math.floor(Date.now() / 1000)));
+      deleteFormData.append("signature", generateSignature(avatarPublicId));
+
+      await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/destroy`,
+        {
+          method: "POST",
+          body: deleteFormData,
+        }
+      );
+    }
+
+    const response = await fetch(
+      "https://api.cloudinary.com/v1_1/dqndn3yku/image/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
+    setAvatarUrl(data.secure_url);
+    setAvatarPublicId(data.public_id);
+  };
+
+  const generateSignature = (publicId: string) => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signatureString = `public_id=${publicId}&timestamp=${timestamp}${process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET}`;
+    return crypto.createHash("sha256").update(signatureString).digest("hex");
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: { "image/*": [] },
+    maxFiles: 1,
+  });
+
   async function onSubmit(values: z.infer<typeof SignUpSchema>) {
     setIsLoading(true);
     const formData = new FormData();
+    formData.append("firstName", values.firstName);
+    formData.append("lastName", values.lastName);
+    formData.append("username", values.username);
     formData.append("email", values.email);
     formData.append("password", values.password);
+    if (avatarUrl) {
+      formData.append("avatar", avatarUrl);
+    }
     await signup(formData);
     setIsLoading(false);
   }
@@ -58,8 +122,27 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
         >
           <h1 className="text-2xl font-bold">Sign up for a new account</h1>
           <p className="text-balance text-sm text-muted-foreground">
-            Enter your email below to register a new account
+            Fill in the form to create an account
           </p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <div {...getRootProps()} className="flex flex-col items-center">
+            <input {...getInputProps()} />
+            <Avatar className="m-auto h-24 w-24 cursor-pointer">
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} />
+              ) : (
+                <AvatarFallback>CN</AvatarFallback>
+              )}
+            </Avatar>
+            <p className="mt-2 text-sm text-muted-foreground text-center">
+              Drag & drop an image, or click to select one (optional)
+            </p>
+          </div>
         </motion.div>
         <motion.div
           className="flex flex-row gap-4"

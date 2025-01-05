@@ -35,9 +35,9 @@ export default async function Home() {
     >
       <AppSidebar
         user={{
-          name: "andika wahyu syaputra",
+          name: data.user.user_metadata.username || "",
           email: data.user.email || "",
-          avatar: "/avatars/shadcn.jpg",
+          avatar: data.user.user_metadata.avatar || "",
         }}
       />
       <SidebarInset>
