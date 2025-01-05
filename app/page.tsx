@@ -12,9 +12,19 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { createClient } from "@/utils/supabase/server";
 import { Separator } from "@radix-ui/react-dropdown-menu";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    redirect("/sign-in");
+  }
+
   return (
     <SidebarProvider
       style={
@@ -23,7 +33,13 @@ export default function Home() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar />
+      <AppSidebar
+        user={{
+          name: "andika wahyu syaputra",
+          email: data.user.email || "",
+          avatar: "/avatars/shadcn.jpg",
+        }}
+      />
       <SidebarInset>
         <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
           <SidebarTrigger className="-ml-1" />

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { SignInSchema } from "@/lib/validations";
+import { SignUpSchema } from "@/lib/validations";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -23,15 +23,19 @@ interface SignUpFormProps {
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
-  const form = useForm<z.infer<typeof SignInSchema>>({
-    resolver: zodResolver(SignInSchema),
+  const form = useForm<z.infer<typeof SignUpSchema>>({
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
+      username: "",
+      firstName: "",
+      lastName: "",
       email: "",
       password: "",
+      passwordConfirmation: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof SignInSchema>) {
+  async function onSubmit(values: z.infer<typeof SignUpSchema>) {
     setIsLoading(true);
     const formData = new FormData();
     formData.append("email", values.email);
@@ -58,9 +62,76 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
           </p>
         </motion.div>
         <motion.div
+          className="flex flex-row gap-4"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
+        >
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First name *</FormLabel>
+                <FormControl>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Your first name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last name *</FormLabel>
+                <FormControl>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Your last name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username *</FormLabel>
+                <FormControl>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="Your username"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
         >
           <FormField
             control={form.control}
@@ -84,7 +155,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.6 }}
         >
           <FormField
             control={form.control}
@@ -96,7 +167,31 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="your password"
+                    placeholder="Your password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <FormField
+            control={form.control}
+            name="passwordConfirmation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password confirmation *</FormLabel>
+                <FormControl>
+                  <Input
+                    id="passwordConfirmation"
+                    type="password"
+                    placeholder="Re-type your password here"
                     {...field}
                   />
                 </FormControl>
@@ -108,7 +203,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.8 }}
           className="flex"
         >
           <Button type="submit" className="w-full">
@@ -128,7 +223,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.9 }}
           className="flex"
         >
           <Button variant="outline" className="w-full">
@@ -145,7 +240,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
           className="text-center text-sm"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1 }}
         >
           Already have an account?{" "}
           <Link href="/sign-in" className="underline underline-offset-4">
