@@ -7,6 +7,7 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 import {
   SidebarProvider,
   SidebarInset,
@@ -55,6 +56,7 @@ export default async function Home() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <ModeToggle className="ml-auto" />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           {Array.from({ length: 24 }).map((_, index) => (
