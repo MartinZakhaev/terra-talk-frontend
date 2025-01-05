@@ -1,3 +1,4 @@
+import { ChatBubble } from "@/components/chat/chatBubble";
 import { AppSidebar } from "@/components/navigations/appSidebar";
 import {
   Breadcrumb,
@@ -61,9 +62,19 @@ export default async function Home() {
           </Breadcrumb>
           <ModeToggle className="ml-auto" />
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 justify-between">
-          <div>Chat container</div>
-          <div className="flex flex-row items-center gap-4 justify-between">
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          <div className="flex-1 flex-col overflow-y-auto max-h-[calc(100vh-10rem)]">
+            {Array.from({ length: 24 }).map((_, index) => (
+              <ChatBubble
+                key={index}
+                avatar="https://via.placeholder.com/40"
+                username={`User ${index + 1}`}
+                timestamp="Just now"
+                message="This is a mock message."
+              />
+            ))}
+          </div>
+          <div className="sticky bottom-0 flex flex-row items-center gap-4 bg-background p-0">
             <Button>
               <Paperclip />
             </Button>
