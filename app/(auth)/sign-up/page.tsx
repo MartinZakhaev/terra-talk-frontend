@@ -1,9 +1,7 @@
-import { login, signup } from "../../../lib/actions/auth.action";
-
 import { GalleryVerticalEnd } from "lucide-react";
 
 import SignUpForm from "@/components/auth/signUpForm";
-import Image from "next/image";
+// import Image from "next/image";
 
 export default function LoginPage() {
   return (

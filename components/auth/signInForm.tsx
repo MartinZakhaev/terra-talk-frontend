@@ -1,5 +1,7 @@
 "use client";
 
+import { login } from "../../lib/actions/auth.action";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -16,7 +18,11 @@ import {
   FormMessage,
 } from "../ui/form";
 
-const SignInForm = () => {
+interface SignInFormProps {
+  setIsLoading: (isLoading: boolean) => void;
+}
+
+const SignInForm: React.FC<SignInFormProps> = ({ setIsLoading }) => {
   const form = useForm<z.infer<typeof SignInSchema>>({
     resolver: zodResolver(SignInSchema),
     defaultValues: {
@@ -25,8 +31,13 @@ const SignInForm = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof SignInSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof SignInSchema>) {
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append("email", values.email);
+    formData.append("password", values.password);
+    await login(formData);
+    setIsLoading(false);
   }
 
   return (
