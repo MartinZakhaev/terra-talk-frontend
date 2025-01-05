@@ -4,15 +4,26 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import { SignInSchema, SignUpSchema } from "../validations";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
 
+  const formDataObj = Object.fromEntries(formData.entries());
+
+  const parsedData = SignInSchema.safeParse(formDataObj);
+
+  if (!parsedData.success) {
+    redirect("/error");
+  }
+
+  const { email, password } = parsedData.data;
+
   // type-casting here for convenience
   // in practice, you should validate your inputs
   const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email,
+    password,
   };
 
   const { error } = await supabase.auth.signInWithPassword(data);
@@ -28,25 +39,32 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient();
 
-  const user_metadata: Record<string, string> = {
-    firstName: formData.get("firstName") as string,
-    lastName: formData.get("lastName") as string,
-    username: formData.get("username") as string,
-  };
+  const formDataObj = Object.fromEntries(formData.entries());
 
-  // Conditionally add avatar if it exists
-  const avatar = formData.get("avatar") as string | null;
-  if (avatar) {
-    user_metadata.avatar = avatar;
+  const parsedData = SignUpSchema.safeParse(formDataObj);
+
+  if (!parsedData.success) {
+    redirect("/error");
   }
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
+  const { firstName, lastName, username, email, password, avatar } =
+    parsedData.data;
+
+  const userMetadata: Record<string, string> = {
+    firstName,
+    lastName,
+    username,
+  };
+
+  if (avatar) {
+    userMetadata.avatar = avatar;
+  }
+
   const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email,
+    password,
     options: {
-      data: user_metadata,
+      data: userMetadata,
     },
   };
 
