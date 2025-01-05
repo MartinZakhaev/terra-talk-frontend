@@ -1,11 +1,24 @@
+"use client";
+
+import { useState } from "react";
 import { GalleryVerticalEnd } from "lucide-react";
 
 import SignUpForm from "@/components/auth/signUpForm";
+import { HashLoader } from "react-spinners";
 // import Image from "next/image";
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [isLoading, setIsLoading] = useState(false);
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
+      {isLoading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-white bg-opacity-75 backdrop-blur-sm z-50">
+          <div className="text-xl font-bold">
+            Almost there, preparing your new account
+          </div>
+          <HashLoader />
+        </div>
+      )}
       <div className="relative hidden lg:block">
         {/* <Image
           src="/images/signin.gif"
@@ -26,7 +39,7 @@ export default function LoginPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <SignUpForm />
+            <SignUpForm setIsLoading={setIsLoading} />
           </div>
         </div>
       </div>
