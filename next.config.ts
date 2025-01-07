@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["via.placeholder.com", "img.daisyui.com"],
+    remotePatterns: [
+      { protocol: "https", hostname: "via.placeholder.com" },
+      { protocol: "https", hostname: "img.daisyui.com" },
+    ],
   },
 };
 

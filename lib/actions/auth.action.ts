@@ -68,9 +68,34 @@ export async function signup(formData: FormData) {
     },
   };
 
-  const { error } = await supabase.auth.signUp(data);
+  const { data: authResponse, error: authError } = await supabase.auth.signUp(
+    data
+  );
 
-  if (error) {
+  if (authError) {
+    redirect("/error");
+  }
+
+  const userId = authResponse.user?.id;
+
+  if (!userId) {
+    redirect("/error");
+  }
+
+  const userTableData = {
+    id: userId,
+    email,
+    firstName,
+    lastName,
+    username,
+    avatar: avatar || null,
+  };
+
+  const { error: insertError } = await supabase
+    .from("User")
+    .insert(userTableData);
+
+  if (insertError) {
     redirect("/error");
   }
 

@@ -101,6 +101,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ setIsLoading }) => {
     formData.append("username", values.username);
     formData.append("email", values.email);
     formData.append("password", values.password);
+    formData.append("passwordConfirmation", values.passwordConfirmation);
     if (avatarUrl) {
       formData.append("avatar", avatarUrl);
     }
