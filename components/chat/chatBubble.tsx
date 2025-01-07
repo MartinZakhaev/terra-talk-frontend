@@ -14,25 +14,43 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
   message,
 }) => {
   return (
-    <div className="flex m-4 items-center gap-4 p-4 bg-primary-foreground rounded-lg shadow-md">
-      <Image
-        src={avatar}
-        alt={`${username}'s avatar`}
-        width={40}
-        height={40}
-        className="rounded-full"
-      />
-      <div className="flex flex-col">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
-            {username}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {timestamp}
-          </span>
+    <>
+      <div className="chat chat-start">
+        <div className="chat-image avatar">
+          <div className="w-10 rounded-full">
+            <Image
+              alt="Tailwind CSS chat bubble component"
+              width="40"
+              height="40"
+              src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+            />
+          </div>
         </div>
-        <p className="mt-1 text-gray-800 dark:text-gray-200">{message}</p>
+        <div className="chat-header">
+          Obi-Wan Kenobi
+          <time className="text-xs opacity-50">12:45</time>
+        </div>
+        <div className="chat-bubble">You were the Chosen One!</div>
+        <div className="chat-footer opacity-50">Delivered</div>
       </div>
-    </div>
+      <div className="chat chat-end">
+        <div className="chat-image avatar">
+          <div className="w-10 rounded-full">
+            <Image
+              alt="Tailwind CSS chat bubble component"
+              width="40"
+              height="40"
+              src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
+            />
+          </div>
+        </div>
+        <div className="chat-header">
+          Anakin
+          <time className="text-xs opacity-50">12:46</time>
+        </div>
+        <div className="chat-bubble">I hate you!</div>
+        <div className="chat-footer opacity-50">Seen at 12:46</div>
+      </div>
+    </>
   );
 };
