@@ -20,26 +20,18 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "../ui/button";
 import { NewConversationSchema } from "@/lib/validations";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
-import { Input } from "../ui/input";
 import { toastError, toastSuccess } from "@/utils/toast";
 import { timeAgo } from "@/utils/timeAgo";
 import Link from "next/link";
 import { useConversationStore } from "@/stores/useConversationStore";
 import { NewConversationDialog } from "../dialogs/newConversationDialog";
+import Lottie from "lottie-react";
+import emptyAnimation from "@/public/animations/pageNotFound.json";
+import { useTheme } from "next-themes";
 
 interface AppSidebarProps {
   user: {
@@ -185,6 +177,8 @@ export function AppSidebar({
 }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
   // Note: I'm using state to show active item.
   // IRL you should use the url/router.
+  const { theme } = useTheme();
+  const [color, setColor] = useState("#000000");
   const [activeItem, setActiveItem] = useState(data.navMain[0]);
   const [mails, setMails] = useState(data.mails);
   const { conversations, fetchConversations, addConversation } = useConversationStore();
@@ -323,7 +317,26 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-              {conversations.map((conversation) => (
+              {conversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  {/* <MessageSquarePlus className="h-12 w-12 text-muted-foreground/50 mb-4" /> */}
+                  <div className="w-60 h-60 mb-4">
+                    <Lottie
+                      animationData={emptyAnimation}
+                      loop={true}
+                      autoplay={true}
+                      style={{
+                        filter: theme === "dark" ? "invert(1)" : "none",
+                        opacity: theme === "dark" ? 0.8 : 1
+                      }}
+                    />
+                  </div>
+                  <h3 className="font-medium mb-1">No conversations yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start chatting by creating a new conversation
+                  </p>
+                </div>
+              ) : (conversations.map((conversation) => (
                 <Link
                   href={`/conversations/${conversation.id}`}
                   key={conversation.id}
@@ -340,7 +353,7 @@ export function AppSidebar({
                       : "This is the beginning of ur conversation"}
                   </span>
                 </Link>
-              ))}
+              )))}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
