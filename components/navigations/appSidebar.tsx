@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
-import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { ArchiveX, Command, File, Inbox, Send, Trash2, MessageSquarePlus } from "lucide-react";
 
 import { NavUser } from "@/components/navigations/navUser";
 import { Label } from "@/components/ui/label";
@@ -19,9 +20,30 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import { NewConversationSchema } from "@/lib/validations";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Input } from "../ui/input";
+import { toastError, toastSuccess } from "@/utils/toast";
+import { timeAgo } from "@/utils/timeAgo";
+import Link from "next/link";
+import { useConversationStore } from "@/stores/useConversationStore";
+import { NewConversationDialog } from "../dialogs/newConversationDialog";
 
 interface AppSidebarProps {
   user: {
+    id: string;
     name: string;
     email: string;
     avatar: string;
@@ -64,6 +86,12 @@ const data = {
       title: "Trash",
       url: "#",
       icon: Trash2,
+      isActive: false,
+    },
+    {
+      title: "New Conversation",
+      url: "#",
+      icon: MessageSquarePlus,
       isActive: false,
     },
   ],
@@ -157,9 +185,52 @@ export function AppSidebar({
 }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
   // Note: I'm using state to show active item.
   // IRL you should use the url/router.
-  const [activeItem, setActiveItem] = React.useState(data.navMain[0]);
-  const [mails, setMails] = React.useState(data.mails);
+  const [activeItem, setActiveItem] = useState(data.navMain[0]);
+  const [mails, setMails] = useState(data.mails);
+  const { conversations, fetchConversations, addConversation } = useConversationStore();
   const { setOpen } = useSidebar();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof NewConversationSchema>>({
+    resolver: zodResolver(NewConversationSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof NewConversationSchema>) {
+    try {
+      const response = await axios.post("http://localhost:7777/api/conversations", {
+        inviterId: user.id,
+        inviteeEmail: values.email,
+      });
+
+      addConversation(response.data);
+      setIsDialogOpen(false);
+      form.reset();
+      toastSuccess("Conversation created successfully!");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        form.reset();
+        toastError("User not found with this email address");
+      } else {
+        form.reset();
+        toastError("Failed to create conversation");
+      }
+    }
+  }
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (user?.id) {
+      fetchConversations(user.id);
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [user?.id]);
 
   return (
     <Sidebar
@@ -203,6 +274,10 @@ export function AppSidebar({
                         hidden: false,
                       }}
                       onClick={() => {
+                        if (item.title === "New Conversation") {
+                          setIsDialogOpen(true);
+                          return;
+                        }
                         setActiveItem(item);
                         const mail = data.mails.sort(() => Math.random() - 0.5);
                         setMails(
@@ -248,26 +323,72 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-              {mails.map((mail) => (
-                <a
-                  href="#"
-                  key={mail.email}
+              {conversations.map((conversation) => (
+                <Link
+                  href={`/conversations/${conversation.id}`}
+                  key={conversation.id}
                   className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
                   <div className="flex w-full items-center gap-2">
-                    <span>{mail.name}</span>{" "}
-                    <span className="ml-auto text-xs">{mail.date}</span>
+                    <span>{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.username}</span>{" "}
+                    <span className="ml-auto text-xs">{timeAgo(conversation.createdAt)}</span>
                   </div>
-                  <span className="font-medium">{mail.subject}</span>
+                  <span className="font-medium">{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.firstName}</span>
                   <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
-                    {mail.teaser}
+                    {conversation.messages[0]
+                      ? `${conversation.messages[0].sender.firstName}: ${conversation.messages[0].content}`
+                      : "This is the beginning of ur conversation"}
                   </span>
-                </a>
+                </Link>
               ))}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
+
+      <NewConversationDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        userId={user.id}
+      />
+
+      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Conversation</DialogTitle>
+            <DialogDescription>
+              Start a new conversation with other users.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="grid gap-4 py-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="email@example.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <DialogFooter>
+                <Button>Create</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog> */}
     </Sidebar>
   );
 }

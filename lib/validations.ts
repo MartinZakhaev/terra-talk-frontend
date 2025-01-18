@@ -60,3 +60,9 @@ export const SignUpSchema = z
     message: "Passwords do not match",
     path: ["passwordConfirmation"],
   });
+
+export const NewConversationSchema = z.object({
+  email: z.string().min(1, { message: "Email is required" }).email({
+    message: "Must be a valid email",
+  }),
+});

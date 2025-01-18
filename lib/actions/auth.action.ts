@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
 import { SignInSchema, SignUpSchema } from "../validations";
+import { messageStore } from "@/stores/useMessageStore";
+import { conversationStore } from "@/stores/useConversationStore";
 
 export async function login(formData: FormData) {
   const supabase = await createClient();
@@ -19,8 +21,6 @@ export async function login(formData: FormData) {
 
   const { email, password } = parsedData.data;
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const data = {
     email,
     password,
@@ -32,7 +32,7 @@ export async function login(formData: FormData) {
     redirect("/error");
   }
 
-  revalidatePath("/", "layout");
+  // revalidatePath("/", "layout");
   redirect("/");
 }
 
@@ -99,14 +99,18 @@ export async function signup(formData: FormData) {
     redirect("/error");
   }
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  // revalidatePath("/", "layout");
+  redirect("/sign-in");
 }
 
 export async function signout() {
   const supabase = await createClient();
-  const { error } = await supabase.auth.signOut();
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  messageStore.getState().reset();
+  conversationStore.getState().reset();
+
+  await supabase.auth.signOut();
+
+  // revalidatePath("/", "layout");
+  redirect("/sign-in");
 }

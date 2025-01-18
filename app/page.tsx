@@ -1,4 +1,3 @@
-import { ChatBubble } from "@/components/chat/chatBubble";
 import { AppSidebar } from "@/components/navigations/appSidebar";
 import {
   Breadcrumb,
@@ -8,8 +7,6 @@ import {
   BreadcrumbSeparator,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import {
   SidebarProvider,
@@ -18,8 +15,8 @@ import {
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/server";
 import { Separator } from "@radix-ui/react-dropdown-menu";
-import { Paperclip, Send } from "lucide-react";
 import { redirect } from "next/navigation";
+import { WelcomeScreen } from "@/components/welcome/welcomeScreen";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -40,6 +37,7 @@ export default async function Home() {
     >
       <AppSidebar
         user={{
+          id: data.user.id || "",
           name: data.user.user_metadata.username || "",
           email: data.user.email || "",
           avatar: data.user.user_metadata.avatar || "",
@@ -52,7 +50,7 @@ export default async function Home() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">All Inboxes</BreadcrumbLink>
+                <BreadcrumbLink href="/">All Inboxes</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
@@ -63,27 +61,8 @@ export default async function Home() {
           <ModeToggle className="ml-auto" />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="flex-1 flex-col overflow-y-auto max-h-[calc(100vh-10rem)]">
-            {Array.from({ length: 24 }).map((_, index) => (
-              <ChatBubble
-                key={index}
-                avatar="https://via.placeholder.com/40"
-                username={`User ${index + 1}`}
-                timestamp="Just now"
-                message="This is a mock message."
-              />
-            ))}
-          </div>
-          <div className="sticky bottom-0 flex flex-row items-center gap-4 bg-background p-0">
-            <Button>
-              <Paperclip />
-            </Button>
-            <div className="flex flex-1">
-              <Input placeholder="Type a message" />
-            </div>
-            <Button>
-              <Send />
-            </Button>
+          <div className="flex-1 flex-col overflow-y-auto max-h-[calc(100vh-10rem)] items-center justify-center">
+            <WelcomeScreen userId={data.user.id} />
           </div>
         </div>
       </SidebarInset>
