@@ -3,20 +3,22 @@ import axios from "axios";
 import { toastError } from "@/utils/toast";
 import { io, Socket } from "socket.io-client";
 import { useStore } from "zustand";
+import { conversationStore } from "./useConversationStore";
+import { Message } from "@/types/chat";
 
-interface Message {
-  id: string;
-  content: string;
-  createdAt: string;
-  senderId: string;
-  conversationId: string;
-  sender: {
-    firstName: string;
-    lastName: string;
-    username: string;
-    avatar?: string;
-  };
-}
+// interface Message {
+//   id: string;
+//   content: string;
+//   createdAt: string;
+//   senderId: string;
+//   conversationId: string;
+//   sender: {
+//     firstName: string;
+//     lastName: string;
+//     username: string;
+//     avatar?: string;
+//   };
+// }
 
 interface MessageStore {
   messages: Message[];
@@ -48,6 +50,9 @@ export const messageStore = createStore<MessageStore>((set, get) => ({
         set((state) => ({
           messages: [...state.messages, message],
         }));
+        conversationStore
+          .getState()
+          .updateConversationLastMessage(message.conversationId, message);
       }
     });
 
@@ -98,6 +103,9 @@ export const messageStore = createStore<MessageStore>((set, get) => ({
       set((state) => ({
         messages: [...state.messages, response.data],
       }));
+      conversationStore
+        .getState()
+        .updateConversationLastMessage(conversationId, response.data);
     } catch (error) {
       toastError("Failed to send message");
     }
