@@ -291,9 +291,44 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-              {conversations.length === 0 ? (
+              {Array.isArray(conversations) ? (
+                conversations.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <div className="w-60 h-60 mb-4">
+                      <Lottie
+                        animationData={emptyAnimation}
+                        loop={true}
+                        autoplay={true}
+                        style={lottieStyle}
+                      />
+                    </div>
+                    <h3 className="font-medium mb-1">No conversations yet</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Start chatting by creating a new conversation
+                    </p>
+                  </div>
+                ) : (
+                  conversations.map((conversation) => (
+                    <Link
+                      href={`/conversations/${conversation.id}`}
+                      key={conversation.id}
+                      className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    >
+                      <div className="flex w-full items-center gap-2">
+                        <span>{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.username}</span>{" "}
+                        <span className="ml-auto text-xs">{timeAgo(conversation.createdAt)}</span>
+                      </div>
+                      <span className="font-medium">{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.firstName}</span>
+                      <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
+                        {conversation.messages[0]
+                          ? `${conversation.messages[0].sender.firstName}: ${conversation.messages[0].content}`
+                          : "This is the beginning of ur conversation"}
+                      </span>
+                    </Link>
+                  ))
+                )
+              ) : (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
-                  {/* <MessageSquarePlus className="h-12 w-12 text-muted-foreground/50 mb-4" /> */}
                   <div className="w-60 h-60 mb-4">
                     <Lottie
                       animationData={emptyAnimation}
@@ -302,29 +337,9 @@ export function AppSidebar({
                       style={lottieStyle}
                     />
                   </div>
-                  <h3 className="font-medium mb-1">No conversations yet</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Start chatting by creating a new conversation
-                  </p>
+                  <h3 className="font-medium mb-1">Loading conversations...</h3>
                 </div>
-              ) : (conversations.map((conversation) => (
-                <Link
-                  href={`/conversations/${conversation.id}`}
-                  key={conversation.id}
-                  className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                >
-                  <div className="flex w-full items-center gap-2">
-                    <span>{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.username}</span>{" "}
-                    <span className="ml-auto text-xs">{timeAgo(conversation.createdAt)}</span>
-                  </div>
-                  <span className="font-medium">{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.firstName}</span>
-                  <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
-                    {conversation.messages[0]
-                      ? `${conversation.messages[0].sender.firstName}: ${conversation.messages[0].content}`
-                      : "This is the beginning of ur conversation"}
-                  </span>
-                </Link>
-              )))}
+              )}
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>

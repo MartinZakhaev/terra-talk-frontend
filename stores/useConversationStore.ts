@@ -41,7 +41,7 @@ interface ConversationStore {
 }
 
 export const conversationStore = createStore<ConversationStore>((set) => ({
-  conversations: [],
+  conversations: [] as Conversation[],
   isLoading: false,
   fetchConversations: async (userId: string) => {
     try {
