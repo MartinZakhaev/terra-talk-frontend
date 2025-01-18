@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ArchiveX, Command, File, Inbox, Send, Trash2, MessageSquarePlus } from "lucide-react";
 
 import { NavUser } from "@/components/navigations/navUser";
@@ -26,6 +26,7 @@ import { NewConversationDialog } from "../dialogs/newConversationDialog";
 import Lottie from "lottie-react";
 import emptyAnimation from "@/public/animations/pageNotFound.json";
 import { useTheme } from "next-themes";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface AppSidebarProps {
   user: {
@@ -36,13 +37,7 @@ interface AppSidebarProps {
   };
 }
 
-// This is sample data
 const data = {
-  // user: {
-  //   name: "shadcn",
-  //   email: "m@example.com",
-  //   avatar: "/avatars/shadcn.jpg",
-  // },
   navMain: [
     {
       title: "Inbox",
@@ -81,88 +76,6 @@ const data = {
       isActive: false,
     },
   ],
-  // mails: [
-  //   {
-  //     name: "William Smith",
-  //     email: "williamsmith@example.com",
-  //     subject: "Meeting Tomorrow",
-  //     date: "09:34 AM",
-  //     teaser:
-  //       "Hi team, just a reminder about our meeting tomorrow at 10 AM.\nPlease come prepared with your project updates.",
-  //   },
-  //   {
-  //     name: "Alice Smith",
-  //     email: "alicesmith@example.com",
-  //     subject: "Re: Project Update",
-  //     date: "Yesterday",
-  //     teaser:
-  //       "Thanks for the update. The progress looks great so far.\nLet's schedule a call to discuss the next steps.",
-  //   },
-  //   {
-  //     name: "Bob Johnson",
-  //     email: "bobjohnson@example.com",
-  //     subject: "Weekend Plans",
-  //     date: "2 days ago",
-  //     teaser:
-  //       "Hey everyone! I'm thinking of organizing a team outing this weekend.\nWould you be interested in a hiking trip or a beach day?",
-  //   },
-  //   {
-  //     name: "Emily Davis",
-  //     email: "emilydavis@example.com",
-  //     subject: "Re: Question about Budget",
-  //     date: "2 days ago",
-  //     teaser:
-  //       "I've reviewed the budget numbers you sent over.\nCan we set up a quick call to discuss some potential adjustments?",
-  //   },
-  //   {
-  //     name: "Michael Wilson",
-  //     email: "michaelwilson@example.com",
-  //     subject: "Important Announcement",
-  //     date: "1 week ago",
-  //     teaser:
-  //       "Please join us for an all-hands meeting this Friday at 3 PM.\nWe have some exciting news to share about the company's future.",
-  //   },
-  //   {
-  //     name: "Sarah Brown",
-  //     email: "sarahbrown@example.com",
-  //     subject: "Re: Feedback on Proposal",
-  //     date: "1 week ago",
-  //     teaser:
-  //       "Thank you for sending over the proposal. I've reviewed it and have some thoughts.\nCould we schedule a meeting to discuss my feedback in detail?",
-  //   },
-  //   {
-  //     name: "David Lee",
-  //     email: "davidlee@example.com",
-  //     subject: "New Project Idea",
-  //     date: "1 week ago",
-  //     teaser:
-  //       "I've been brainstorming and came up with an interesting project concept.\nDo you have time this week to discuss its potential impact and feasibility?",
-  //   },
-  //   {
-  //     name: "Olivia Wilson",
-  //     email: "oliviawilson@example.com",
-  //     subject: "Vacation Plans",
-  //     date: "1 week ago",
-  //     teaser:
-  //       "Just a heads up that I'll be taking a two-week vacation next month.\nI'll make sure all my projects are up to date before I leave.",
-  //   },
-  //   {
-  //     name: "James Martin",
-  //     email: "jamesmartin@example.com",
-  //     subject: "Re: Conference Registration",
-  //     date: "1 week ago",
-  //     teaser:
-  //       "I've completed the registration for the upcoming tech conference.\nLet me know if you need any additional information from my end.",
-  //   },
-  //   {
-  //     name: "Sophia White",
-  //     email: "sophiawhite@example.com",
-  //     subject: "Team Dinner",
-  //     date: "1 week ago",
-  //     teaser:
-  //       "To celebrate our recent project success, I'd like to organize a team dinner.\nAre you available next Friday evening? Please let me know your preferences.",
-  //   },
-  // ],
 };
 
 export function AppSidebar({
@@ -174,10 +87,28 @@ export function AppSidebar({
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [activeItem, setActiveItem] = useState(data.navMain[0]);
-  // const [mails, setMails] = useState(data.mails);
-  const { conversations, fetchConversations, addConversation } = useConversationStore();
+  const { conversations, fetchConversations } = useConversationStore();
   const { setOpen } = useSidebar();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const { hasMore, isLoading, currentPage } = useConversationStore();
+
+  const rowVirtualizer = useVirtualizer({
+    count: conversations.length + (hasMore ? 1 : 0),
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 100, // Estimate height of each conversation item
+    overscan: 5,
+  });
+
+  useEffect(() => {
+    const lastItem = rowVirtualizer.getVirtualItems().at(-1);
+    if (!lastItem || !hasMore || isLoading) return;
+
+    const isLastItemVisible = lastItem.index === conversations.length;
+    if (isLastItemVisible) {
+      fetchConversations(user.id, currentPage + 1);
+    }
+  }, [rowVirtualizer.getVirtualItems()]);
 
   useEffect(() => {
     setMounted(true);
@@ -247,13 +178,6 @@ export function AppSidebar({
                           return;
                         }
                         setActiveItem(item);
-                        // const mail = data.mails.sort(() => Math.random() - 0.5);
-                        // setMails(
-                        //   mail.slice(
-                        //     0,
-                        //     Math.max(5, Math.floor(Math.random() * 10) + 1)
-                        //   )
-                        // );
                         setOpen(true);
                       }}
                       isActive={activeItem.title === item.title}
@@ -291,43 +215,7 @@ export function AppSidebar({
         <SidebarContent>
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-              {Array.isArray(conversations) ? (
-                conversations.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <div className="w-60 h-60 mb-4">
-                      <Lottie
-                        animationData={emptyAnimation}
-                        loop={true}
-                        autoplay={true}
-                        style={lottieStyle}
-                      />
-                    </div>
-                    <h3 className="font-medium mb-1">No conversations yet</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Start chatting by creating a new conversation
-                    </p>
-                  </div>
-                ) : (
-                  conversations.map((conversation) => (
-                    <Link
-                      href={`/conversations/${conversation.id}`}
-                      key={conversation.id}
-                      className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    >
-                      <div className="flex w-full items-center gap-2">
-                        <span>{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.username}</span>{" "}
-                        <span className="ml-auto text-xs">{timeAgo(conversation.createdAt)}</span>
-                      </div>
-                      <span className="font-medium">{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.firstName}</span>
-                      <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
-                        {conversation.messages[0]
-                          ? `${conversation.messages[0].sender.firstName}: ${conversation.messages[0].content}`
-                          : "This is the beginning of ur conversation"}
-                      </span>
-                    </Link>
-                  ))
-                )
-              ) : (
+              {Array.isArray(conversations) && conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
                   <div className="w-60 h-60 mb-4">
                     <Lottie
@@ -337,7 +225,63 @@ export function AppSidebar({
                       style={lottieStyle}
                     />
                   </div>
-                  <h3 className="font-medium mb-1">Loading conversations...</h3>
+                  <h3 className="font-medium mb-1">No conversations yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start chatting by creating a new conversation
+                  </p>
+                </div>
+              ) : (
+                <div ref={parentRef} className="h-full overflow-auto">
+                  <div
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const conversation = conversations[virtualRow.index];
+                      const isLoaderRow = virtualRow.index === conversations.length;
+
+                      return (
+                        <div
+                          key={virtualRow.index}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: `${virtualRow.size}px`,
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                        >
+                          {isLoaderRow ? (
+                            hasMore ? (
+                              <div className="flex justify-center items-center h-full">
+                                <span>Loading more...</span>
+                              </div>
+                            ) : null
+                          ) : (
+                            <Link
+                              href={`/conversations/${conversation.id}`}
+                              className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                            >
+                              <div className="flex w-full items-center gap-2">
+                                <span>{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.username}</span>{" "}
+                                <span className="ml-auto text-xs">{timeAgo(conversation.createdAt)}</span>
+                              </div>
+                              <span className="font-medium">{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.firstName}</span>
+                              <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
+                                {conversation.messages[0]
+                                  ? `${conversation.messages[0].sender.firstName}: ${conversation.messages[0].content}`
+                                  : "This is the beginning of ur conversation"}
+                              </span>
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </SidebarGroupContent>

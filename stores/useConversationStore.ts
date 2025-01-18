@@ -31,7 +31,9 @@ import { toastError } from "@/utils/toast";
 interface ConversationStore {
   conversations: Conversation[];
   isLoading: boolean;
-  fetchConversations: (userId: string) => Promise<void>;
+  hasMore: boolean;
+  currentPage: number;
+  fetchConversations: (userId: string, page?: number) => Promise<void>;
   addConversation: (conversation: Conversation) => void;
   updateConversationLastMessage: (
     conversationId: string,
@@ -40,19 +42,30 @@ interface ConversationStore {
   reset: () => void;
 }
 
-export const conversationStore = createStore<ConversationStore>((set) => ({
-  conversations: [] as Conversation[],
+export const conversationStore = createStore<ConversationStore>((set, get) => ({
+  conversations: [],
   isLoading: false,
-  fetchConversations: async (userId: string) => {
+  hasMore: true,
+  currentPage: 1,
+
+  fetchConversations: async (userId: string, page = 1) => {
     try {
       set({ isLoading: true });
       const response = await axios.get(
-        `http://localhost:7777/api/users/${userId}/conversations`
+        `http://localhost:7777/api/users/${userId}/conversations?page=${page}&limit=20`
       );
-      set({ conversations: response.data });
+
+      set((state) => ({
+        conversations:
+          page === 1
+            ? response.data.conversations
+            : [...state.conversations, ...response.data.conversations],
+        hasMore: response.data.hasMore,
+        currentPage: page,
+        isLoading: false,
+      }));
     } catch (error) {
       toastError("Failed to fetch conversations");
-    } finally {
       set({ isLoading: false });
     }
   },
