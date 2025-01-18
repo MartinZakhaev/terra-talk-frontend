@@ -267,14 +267,24 @@ export function AppSidebar({
                               className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             >
                               <div className="flex w-full items-center gap-2">
-                                <span>{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.username}</span>{" "}
-                                <span className="ml-auto text-xs">{timeAgo(conversation.createdAt)}</span>
+                                <span>
+                                  {conversation.participants?.[
+                                    conversation.participants?.[1]?.userId === user.id ? 0 : 1
+                                  ]?.user?.username || 'Unknown User'}
+                                </span>{" "}
+                                <span className="ml-auto text-xs">
+                                  {conversation.createdAt ? timeAgo(conversation.createdAt) : ''}
+                                </span>
                               </div>
-                              <span className="font-medium">{conversation.participants[conversation.participants[1].userId === user.id ? 0 : 1].user.firstName}</span>
+                              <span className="font-medium">
+                                {conversation.participants?.[
+                                  conversation.participants?.[1]?.userId === user.id ? 0 : 1
+                                ]?.user?.firstName || 'Unknown'}
+                              </span>
                               <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
-                                {conversation.messages[0]
-                                  ? `${conversation.messages[0].sender.firstName}: ${conversation.messages[0].content}`
-                                  : "This is the beginning of ur conversation"}
+                                {conversation.messages?.[0]
+                                  ? `${conversation.messages[0].sender?.firstName || 'Unknown'}: ${conversation.messages[0].content}`
+                                  : "This is the beginning of your conversation"}
                               </span>
                             </Link>
                           )}
