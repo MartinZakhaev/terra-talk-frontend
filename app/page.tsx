@@ -14,7 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { createClient } from "@/utils/supabase/server";
-import { Separator } from "@radix-ui/react-dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { redirect } from "next/navigation";
 import { WelcomeScreen } from "@/components/welcome/welcomeScreen";
 
