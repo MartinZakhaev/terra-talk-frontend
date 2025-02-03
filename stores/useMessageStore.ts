@@ -23,10 +23,11 @@ import { Message } from "@/types/chat";
 interface MessageStore {
   messages: Message[];
   isLoading: boolean;
+  hasMore: boolean;
   socket: Socket | null;
   initializeSocket: () => void;
   disconnectSocket: () => void;
-  fetchMessages: (conversationId: string) => Promise<void>;
+  fetchMessages: (conversationId: string, page?: number) => Promise<void>;
   sendMessage: (
     conversationId: string,
     senderId: string,
@@ -39,6 +40,7 @@ interface MessageStore {
 export const messageStore = createStore<MessageStore>((set, get) => ({
   messages: [],
   isLoading: false,
+  hasMore: true,
   socket: null,
 
   initializeSocket: () => {
@@ -67,16 +69,22 @@ export const messageStore = createStore<MessageStore>((set, get) => ({
     }
   },
 
-  fetchMessages: async (conversationId: string) => {
+  fetchMessages: async (conversationId: string, page = 1) => {
     try {
       set({ isLoading: true });
       const response = await axios.get(
-        `http://localhost:7777/api/conversations/${conversationId}/messages`
+        `http://localhost:7777/api/conversations/${conversationId}/messages?page=${page}&limit=10`
       );
-      set({ messages: response.data });
+
+      set((state) => ({
+        messages: page === 1
+          ? response.data.messages
+          : [...response.data.messages, ...state.messages],
+        hasMore: response.data.hasMore,
+        isLoading: false,
+      }));
     } catch (error) {
       toastError("Failed to fetch messages");
-    } finally {
       set({ isLoading: false });
     }
   },
